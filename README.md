@@ -1,4 +1,5 @@
-# Lottery-Application-Based-on-Blockchain-
+# Lottery-Application-Based-on-Blockchain
+
 This Smart contract allows an admin to create a lottery. 
 
 Once the participants have joined the lottery by paying a minimum amount (established by the lottery administrator), the admin of the lottery will lookout for each trasacion and select the winner of the lottery on a random basis.
