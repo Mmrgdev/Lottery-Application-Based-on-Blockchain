@@ -1,39 +1,42 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.0 <0.9.0;
+
+pragma solidity >=0.4.0 <0.9.0;
 
 /**
- * Money Transfer Smart Contract
- * This contracts allows a grantor to transfer money with time maturity to one or more beneficiaries
+ * Lottery Application Smart Contract
+ * This contracts allows an admin to create a customizable lottery
+ * The admin of the lottery will lookout for each trasacion and select the winner of the lottery on a random basis
  */
-contract MonetaryTransfer {
+ contract LotteryApplication {
 
-    struct Beneficiary {
-        uint256 amount;
-        uint256 maturity;
-        bool paid;
-    }
+     address public admin;
+     address payable[] public participants;
 
-    mapping(address => Beneficiary) public beneficiaries;
-    address public grantor;
+     constructor() {
+         admin = msg.sender;
+     }
 
-    constructor() {
-        grantor = msg.sender;
-    }
+     receive() external payable {
+         require(msg.value == 0.1 ether);
+         participants.push(payable(msg.sender));
+     }
 
-    function addBeneficiary(address beneficiary, uint256 timeToMaturity) external payable {
-        require(msg.sender == grantor, "Only the grantor can set up the beneficiary");
-        require(beneficiaries[msg.sender].amount == 0, "The beneficiary already exists");
-        beneficiaries[beneficiary] = Beneficiary(msg.value, block.timestamp + timeToMaturity, false);
-    }
+     function getBalance() public view returns(uint){
+         require(msg.sender == admin);
+         return address(this).balance;
+     }
 
-    uint256 public maturity;
+     function random() public view returns(uint){
+         return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, participants.length)));
+     }
 
-    function withdraw() external {
-        Beneficiary storage beneficiary = beneficiaries[msg.sender];
-        require(beneficiary.maturity <= block.timestamp, "The maturity time has not yet expired");
-        require(beneficiary.amount > 0, "Only the beneficiary can withdrawn the funds");
-        require(beneficiary.paid == false, "The funds have been already withdrawn");
-        beneficiary.paid = true;
-        payable(msg.sender).transfer(beneficiary.amount);
-    }
-}
+     function Winner() public {
+         require(msg.sender == admin);
+         require(participants.length >= 3);
+         address payable winner;
+         uint r = random();
+         uint index = r % participants.length;
+         winner = participants[index];
+         winner.transfer(getBalance());
+     }
+ }
